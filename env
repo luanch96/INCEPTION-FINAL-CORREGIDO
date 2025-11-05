@@ -1,0 +1,13 @@
+# Domain configuration
+DOMAIN_NAME=luisanch.42.fr
+
+# WordPress Admin Configuration
+WP_TITLE=Mi WordPress Inception
+WP_ADMIN_USER=luisanch
+WP_ADMIN_PASSWORD=SecurePass123!
+WP_ADMIN_EMAIL=luisanch@student.42.fr
+
+# WordPress User Configuration  
+WP_USER=wpuser
+WP_USER_PASSWORD=UserPass123!
+WP_USER_EMAIL=user@student.42.fr

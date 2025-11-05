@@ -1,0 +1,91 @@
+services:
+  mariadb:
+    container_name: mariadb
+    build: requirements/mariadb
+    image: mariadb
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - network
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mariadb_root_password
+      - MYSQL_DATABASE=wordpress
+      - MYSQL_USER_FILE=/run/secrets/mariadb_user
+      - MYSQL_PASSWORD_FILE=/run/secrets/mariadb_password
+      - WP_ADMIN_USER=${WP_ADMIN_USER:-luisanch}
+      - WP_ADMIN_PASSWORD=${WP_ADMIN_PASSWORD:-secure_password}
+    secrets:
+      - mariadb_root_password
+      - mariadb_user
+      - mariadb_password
+  
+  wordpress:
+    container_name: wordpress
+    build: requirements/wordpress
+    image: wordpress
+    volumes:
+      - wordpress_data:/var/www/wordpress
+    networks:
+      - network
+    restart: always
+    depends_on:
+      - mariadb
+    environment:
+      - DB_NAME=wordpress
+      - DB_USER_FILE=/run/secrets/mariadb_user
+      - DB_PASSWORD_FILE=/run/secrets/mariadb_password
+      - DB_HOST=mariadb
+      - DOMAIN_NAME=${DOMAIN_NAME:-localhost}
+      - WP_TITLE=${WP_TITLE:-Mi WordPress}
+      - WP_ADMIN_USER=${WP_ADMIN_USER:-luisanch}
+      - WP_ADMIN_PASSWORD=${WP_ADMIN_PASSWORD:-secure_password}
+      - WP_ADMIN_EMAIL=${WP_ADMIN_EMAIL:-luisanch@42.fr}
+    secrets:
+      - mariadb_root_password
+      - mariadb_user
+      - mariadb_password
+
+  nginx:
+    container_name: nginx
+    build: requirements/nginx
+    image: nginx
+    ports:
+        - "443:443"
+    volumes:
+      - wordpress_data:/var/www/wordpress:ro
+      - /home/luisanch/data/ssl:/etc/nginx/ssl:ro
+    networks:
+      - network
+    restart: always
+    depends_on:
+      - wordpress
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME:-localhost}
+
+volumes:
+  mariadb_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/luisanch/data/mariadb
+      o: bind
+  
+  wordpress_data:
+    driver: local 
+    driver_opts:
+      type: none
+      device: /home/luisanch/data/wordpress
+      o: bind
+
+networks:
+  network:
+    driver: bridge
+
+secrets:
+  mariadb_root_password:
+    file: ../secrets/mariadb_root_passwd.txt
+  mariadb_user:
+    file: ../secrets/mariadb_usr_passwd.txt
+  mariadb_password:
+    file: ../secrets/mycredentials.txt
